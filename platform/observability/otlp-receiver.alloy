@@ -29,7 +29,7 @@ otelcol.processor.batch "tcc" {
 }
 
 otelcol.auth.basic "grafana_cloud" {
-  username = "<INSTANCE_ID>"
+  username = "1604714"
   password = sys.env("GCLOUD_RW_API_KEY")
 }
 
