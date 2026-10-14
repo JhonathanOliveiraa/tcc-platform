@@ -1,0 +1,21 @@
+# Kong Ingress Controller (chart kong/ingress 0.24.0, Kong 3.9) para k3s de nó único.
+# Instalação:
+#   helm repo add kong https://charts.konghq.com && helm repo update
+#   helm install kong kong/ingress --version 0.24.0 -n kong --create-namespace -f kong-values.yaml
+gateway:
+  proxy:
+    # O ServiceLB (klipper) do k3s atende o LoadBalancer publicando 80/443 no IP do nó.
+    type: LoadBalancer
+    # Obrigatório: com "Cluster" o klipper faz SNAT e o Kong vê todo cliente como 10.42.0.1
+    # (logs sem IP real e ip-restriction/rate-limiting inúteis).
+    externalTrafficPolicy: Local
+  env:
+    # Obrigatório com wildcards em dois níveis (*.dominio e *.hml.dominio): no roteador
+    # "traditional" o *.dominio também captura x.hml.dominio.
+    router_flavor: traditional_compatible
+    # Só se houver proxy do Cloudflare na frente. Faixas atuais:
+    #   curl -s https://www.cloudflare.com/ips-v4 ; curl -s https://www.cloudflare.com/ips-v6
+    # Gere a linha com: ./arquivos/faixas-cloudflare.sh
+    # trusted_ips: "<faixas v4 e v6 separadas por vírgula>"
+    # real_ip_header: CF-Connecting-IP
+    # real_ip_recursive: "on"

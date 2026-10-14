@@ -1,0 +1,41 @@
+# tcc-platform
+
+Repositório GitOps da plataforma do TCC: **tudo o que o Argo CD aplica no cluster** (k3s na VM ARM64
+da OCI). Fonte única da verdade — depois do bootstrap, nenhuma mudança é feita com `kubectl apply`.
+
+```text
+bootstrap/                único apply manual: instala o Argo CD e a Application raiz
+clusters/oci-k3s/         Application raiz (app-of-apps)
+platform/                 componentes comuns
+  ingress/                Kong (kong-values.yaml, faixas do Cloudflare)
+  cert-manager/           ClusterIssuers Let's Encrypt (DNS-01 no Cloudflare)
+  external-secrets/       External Secrets Operator + ClusterSecretStore do OCI Vault
+  observability/          Grafana Alloy (k8s-monitoring) → Grafana Cloud, receptor OTLP
+  argocd/                 rota da UI do Argo CD
+  argocd-projects/        AppProjects com destinos limitados
+golden-path/base/         template das aplicações: Deployment, Service, probes, resources, OTel
+apps/<aplicação>/         overlay de cada aplicação (a esteira grava aqui a tag da imagem)
+docs/                     roteiro de reconstrução e testes
+```
+
+## Repositórios relacionados
+
+| Repositório | Papel |
+|---|---|
+| `tcc-pipeline-templates` | Templates de CI (backend e frontend) consumidos pelas aplicações |
+| `catalogo-api` | API de Produtos (ASP.NET Core) — código, Dockerfile e `ci.yml` |
+| `catalogo-front` | Frontend de Catálogo (Angular) — código, Dockerfile e `ci.yml` |
+| `tcc-documentacao` | Texto do TCC, apresentação e planejamento |
+
+O CI de uma aplicação **só escreve** em `apps/<aplicação>/kustomization.yaml`; o restante deste
+repositório é mantido pela equipe de plataforma.
+
+## Segredos
+
+Nenhum valor no Git. Os valores ficam no **OCI Vault**; aqui ficam apenas `ExternalSecret` com os nomes
+(padrão `<AMB>-TCC-<APP>-<CHAVE>`). A VM se autentica por Instance Principal.
+
+## Reconstruir do zero
+
+[`docs/RECONSTRUIR_CLUSTER.md`](docs/RECONSTRUIR_CLUSTER.md) — roteiro por fases, com versões
+fixadas e verificação ao fim de cada fase. Execute os comandos a partir da raiz deste repositório.
