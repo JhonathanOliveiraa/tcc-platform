@@ -1,0 +1,7 @@
+# CRDs da Gateway API, canal standard. Versão igual à que o Kong Ingress Controller 3.5.x usa
+# (go.mod: sigs.k8s.io/gateway-api v1.3.0). Precisam existir ANTES de o controlador subir:
+# depois de instalar ou atualizar, reinicie o kong-controller.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml

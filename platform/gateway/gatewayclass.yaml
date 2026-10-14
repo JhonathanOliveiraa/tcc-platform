@@ -1,0 +1,10 @@
+# Kong como implementação da Gateway API. "unmanaged": o controlador usa o proxy que já existe
+# (Service kong/kong-gateway-proxy, ServiceLB do k3s) em vez de criar um por Gateway.
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: kong
+  annotations:
+    konghq.com/gatewayclass-unmanaged: "true"
+spec:
+  controllerName: konghq.com/kic-gateway-controller

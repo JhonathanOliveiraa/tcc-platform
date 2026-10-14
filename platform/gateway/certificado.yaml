@@ -1,0 +1,13 @@
+# Um certificado wildcard para todos os hosts da subzona do TCC (DNS-01 no Cloudflare).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tcc-wildcard
+  namespace: kong
+spec:
+  secretName: tcc-wildcard-tls
+  dnsNames:
+    - "*.tcc.altasistemas.com.br"
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
