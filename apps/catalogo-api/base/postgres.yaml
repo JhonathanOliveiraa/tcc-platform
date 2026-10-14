@@ -86,10 +86,15 @@ spec:
         - name: tmp
           emptyDir: {}
   volumeClaimTemplates:
-    - metadata:
+    # apiVersion/kind/volumeMode explícitos: são os defaults gravados pela API; sem eles o Argo CD
+    # acusa OutOfSync.
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
         name: dados
       spec:
         accessModes: [ReadWriteOnce]
+        volumeMode: Filesystem
         storageClassName: local-path
         resources:
           requests:
