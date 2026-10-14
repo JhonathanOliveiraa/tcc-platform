@@ -1,0 +1,13 @@
+# catalogo-api: requisitos do spine (AD-8, AD-9, AD-11) sobre o golden path.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - pairs:
+      app.kubernetes.io/name: catalogo-api
+    includeSelectors: false
+resources:
+  - ../../../golden-path/base
+  - postgres.yaml
+  - externalsecret.yaml
+patches:
+  - path: deployment.yaml

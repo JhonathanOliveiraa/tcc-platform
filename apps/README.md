@@ -1,18 +1,28 @@
 # apps/
 
-Um diretório por aplicação e ambiente (`apps/<app>/hml`, `apps/<app>/prd`), com o overlay Kustomize
-derivado de `golden-path/base`. O `ci.yml` de cada app escolhe o overlay pela branch.
-É o **único** lugar em que a esteira de CI de uma aplicação escreve (commit da tag da imagem).
+Uma pasta por aplicação: `base/` (o que é da app sobre o `golden-path/base`) e um overlay por ambiente
+(`hml/`, `prd/`). O overlay do ambiente é o **único** lugar em que a esteira de CI da app escreve.
 
-Formato mínimo de `apps/<app>/<ambiente>/kustomization.yaml`:
+```text
+apps/<app>/
+  base/           imagem, probes, recursos, volumes e dependências (ex.: PostgreSQL da API)
+  hml/ prd/       namespace <app>-<amb>, host, variáveis, chaves do Vault, tag da imagem
+```
+
+O `ci.yml` da aplicação escolhe o overlay pela branch (`develop` → `hml`, `main` → `prd`). A esteira
+atualiza o `newTag` do bloco `images:`:
 
 ```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: <app>
-resources:
-  - ../../../golden-path/base
 images:
-  - name: ghcr.io/<owner>/<app>
-    newTag: sha-000000000000   # atualizado pela esteira
+  - name: ghcr.io/jhonathanoliveiraa/<app>
+    newTag: sha-<12 primeiros do commit>   # gravado pela esteira
 ```
+
+## Segredos esperados no OCI Vault (`ClusterSecretStore` `oci-vault-tcc`)
+
+| Chave no Vault | Usada por |
+|---|---|
+| `TCC-GHCR-USUARIO`, `TCC-GHCR-TOKEN` | pull das imagens (todas as apps, todos os ambientes; token `read:packages`) |
+| `<AMB>-TCC-CATALOGO-API-POSTGRES-USUARIO`, `<AMB>-TCC-CATALOGO-API-POSTGRES-SENHA` | PostgreSQL e `ConnectionStrings__Catalogo` da API |
+
+`<AMB>` = `HML` ou `PRD`.

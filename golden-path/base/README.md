@@ -1,7 +1,17 @@
 # golden-path/base/
 
-Template base das aplicações: Deployment (probes, resources, securityContext, variáveis OTel), Service,
-`HTTPRoute` (Gateway API, ligada ao Gateway do Kong) e exemplo de ExternalSecret.
+Contrato comum de toda aplicação do TCC:
+
+| Recurso | O que garante |
+|---|---|
+| `Deployment` `app` | porta 8080 `http`, não-root, `readOnlyRootFilesystem`, sem capabilities, seccomp, `/tmp` em `emptyDir`, rolling update sem indisponibilidade, probes (padrão `/healthz`), OTLP para o Alloy |
+| `Service` `app` | porta 80 → `http` |
+| `HTTPRoute` `app` | anexada ao listener `https-tcc` do Gateway `kong/kong`; host definido no overlay |
+| `ExternalSecret` `ghcr` | pull das imagens privadas do GHCR a partir do OCI Vault |
+| `ServiceAccount` `app` | sem token montado |
+
+Convenção: os recursos se chamam `app` e a identidade vem do namespace `<app>-<amb>`. Cada aplicação
+ajusta o contrato em `apps/<app>/base` e cada ambiente em `apps/<app>/<amb>`.
 
 ## Requisitos vindos das arquiteturas das aplicações
 

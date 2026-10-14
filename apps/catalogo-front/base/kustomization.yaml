@@ -1,0 +1,11 @@
+# catalogo-front: requisitos do spine (AD-8) sobre o golden path.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - pairs:
+      app.kubernetes.io/name: catalogo-front
+    includeSelectors: false
+resources:
+  - ../../../golden-path/base
+patches:
+  - path: deployment.yaml

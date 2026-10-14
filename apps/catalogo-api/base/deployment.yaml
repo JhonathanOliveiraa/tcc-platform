@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/jhonathanoliveiraa/catalogo-api
+          env:
+            - name: ConnectionStrings__Catalogo
+              valueFrom:
+                secretKeyRef:
+                  name: catalogo-api-segredos
+                  key: ConnectionStrings__Catalogo
+            - name: OTEL_SERVICE_NAME
+              value: catalogo-api
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          # AD-11: liveness sem dependências; readiness inclui o PostgreSQL (503 com o banco fora).
+          # Startup generoso: Database.Migrate() roda antes de aceitar tráfego (AD-9).
+          startupProbe:
+            httpGet:
+              path: /health/live
+          readinessProbe:
+            httpGet:
+              path: /health
+          livenessProbe:
+            httpGet:
+              path: /health/live

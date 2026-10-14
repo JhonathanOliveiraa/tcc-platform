@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: deployment.environment=hml
+            - name: Cors__OrigensPermitidas
+              value: https://hml-catalogo.tcc.altasistemas.com.br

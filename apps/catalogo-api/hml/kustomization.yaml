@@ -1,0 +1,30 @@
+# catalogo-api em hml: https://hml-catalogo-api.tcc.altasistemas.com.br
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: catalogo-api-hml
+resources:
+  - namespace.yaml
+  - ../base
+patches:
+  - path: deployment.yaml
+  - target:
+      kind: HTTPRoute
+      name: app
+    patch: |-
+      - op: replace
+        path: /spec/hostnames/0
+        value: hml-catalogo-api.tcc.altasistemas.com.br
+  - target:
+      kind: ExternalSecret
+      name: catalogo-api-segredos
+    patch: |-
+      - op: replace
+        path: /spec/data/0/remoteRef/key
+        value: HML-TCC-CATALOGO-API-POSTGRES-USUARIO
+      - op: replace
+        path: /spec/data/1/remoteRef/key
+        value: HML-TCC-CATALOGO-API-POSTGRES-SENHA
+images:
+  # A esteira (tcc-pipeline-templates) grava aqui a tag de cada build.
+  - name: ghcr.io/jhonathanoliveiraa/catalogo-api
+    newTag: sha-000000000000

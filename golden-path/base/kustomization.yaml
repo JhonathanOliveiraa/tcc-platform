@@ -1,0 +1,17 @@
+# Golden Path: o contrato comum de toda aplicação do TCC. Cada app tem um base próprio em
+# apps/<app>/base (imagem, probes, volumes, dependências) e um overlay por ambiente em
+# apps/<app>/<amb> (namespace, host, variáveis, chaves do Vault, tag da imagem).
+#
+# Convenção: os recursos se chamam "app" e a identidade vem do namespace (<app>-<amb>).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: tcc
+    includeSelectors: false
+resources:
+  - serviceaccount.yaml
+  - deployment.yaml
+  - service.yaml
+  - httproute.yaml
+  - externalsecret-ghcr.yaml
