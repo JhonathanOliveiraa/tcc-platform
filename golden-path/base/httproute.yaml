@@ -15,7 +15,12 @@ spec:
   hostnames:
     - definido-no-overlay.tcc.altasistemas.com.br
   rules:
-    - backendRefs:
+    # matches explícito: é o default gravado pela API; sem ele o Argo CD acusa OutOfSync.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
         - group: ""
           kind: Service
           name: app
