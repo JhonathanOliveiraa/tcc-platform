@@ -1,0 +1,57 @@
+# Uma Application por aplicação × ambiente, a partir de apps/<app>/<amb>.
+# O namespace <app>-<amb> é criado pela Application (com os labels que o Gateway e o ESO exigem) e
+# não pertence a ela: apagar uma Application nunca apaga o namespace nem o banco.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: tcc
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - app: catalogo-api
+                - app: catalogo-front
+          - list:
+              elements:
+                - amb: hml
+                - amb: prd
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  template:
+    metadata:
+      name: "{{.app}}-{{.amb}}"
+      labels:
+        app.kubernetes.io/part-of: tcc
+        app.kubernetes.io/name: "{{.app}}"
+        app.kubernetes.io/environment: "{{.amb}}"
+    spec:
+      project: tcc
+      source:
+        repoURL: https://github.com/JhonathanOliveiraa/tcc-platform.git
+        targetRevision: main
+        path: "apps/{{.app}}/{{.amb}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.app}}-{{.amb}}"
+      ignoreDifferences:
+        - group: apps
+          kind: StatefulSet
+          jqPathExpressions:
+            - .spec.volumeClaimTemplates[]?.status
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=true
+          - CreateNamespace=true
+        managedNamespaceMetadata:
+          labels:
+            tcc/exposto: "true"
+            tcc/ambiente: "{{.amb}}"

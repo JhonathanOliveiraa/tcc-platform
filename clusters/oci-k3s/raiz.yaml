@@ -1,0 +1,21 @@
+# Application raiz (app-of-apps). Único apply manual depois do Argo CD instalado:
+#   kubectl apply -f clusters/oci-k3s/raiz.yaml
+# Ela reconcilia clusters/oci-k3s/apps/: o AppProject "tcc" e o ApplicationSet das aplicações.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tcc-raiz
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/JhonathanOliveiraa/tcc-platform.git
+    targetRevision: main
+    path: clusters/oci-k3s/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

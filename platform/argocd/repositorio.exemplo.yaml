@@ -1,0 +1,19 @@
+# Credencial de leitura do Argo CD para os repositórios privados de JhonathanOliveiraa (EXEMPLO:
+# nunca commitar o token). Fine-grained token: só o repositório tcc-platform, Contents: Read-only.
+# Criar sem gravar arquivo:
+#   read -rs "T?Token: " && kubectl -n argocd create secret generic github-jhonathanoliveiraa \
+#     --from-literal=type=git --from-literal=url=https://github.com/JhonathanOliveiraa \
+#     --from-literal=username=x-access-token --from-literal=password="$T" && unset T && \
+#   kubectl -n argocd label secret github-jhonathanoliveiraa argocd.argoproj.io/secret-type=repo-creds
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-jhonathanoliveiraa
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  type: git
+  url: https://github.com/JhonathanOliveiraa
+  username: x-access-token
+  password: TROCAR

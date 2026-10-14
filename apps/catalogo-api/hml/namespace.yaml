@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: catalogo-api-hml
-  labels:
-    tcc/exposto: "true"      # pode anexar HTTPRoute ao listener https-tcc
-    tcc/ambiente: hml

@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: tcc
+  namespace: argocd
+spec:
+  description: TCC — aplicações de validação da plataforma
+  sourceRepos:
+    - https://github.com/JhonathanOliveiraa/tcc-platform.git
+  destinations:
+    - { server: https://kubernetes.default.svc, namespace: catalogo-api-hml }
+    - { server: https://kubernetes.default.svc, namespace: catalogo-api-prd }
+    - { server: https://kubernetes.default.svc, namespace: catalogo-front-hml }
+    - { server: https://kubernetes.default.svc, namespace: catalogo-front-prd }
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace

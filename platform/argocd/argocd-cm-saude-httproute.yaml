@@ -1,0 +1,33 @@
+# Health check de HTTPRoute para o Argo CD (sem ele as Applications ficam Progressing para sempre).
+# Aplicar uma vez: kubectl -n argocd patch configmap argocd-cm --patch-file platform/argocd/argocd-cm-saude-httproute.yaml
+data:
+  resource.customizations.health.gateway.networking.k8s.io_HTTPRoute: |
+    hs = {}
+    if obj.status ~= nil and obj.status.parents ~= nil and #obj.status.parents > 0 then
+      for _, p in ipairs(obj.status.parents) do
+        for _, c in ipairs(p.conditions or {}) do
+          if (c.type == "Accepted" or c.type == "ResolvedRefs") and c.status == "False" then
+            hs.status = "Degraded"
+            hs.message = c.message or (c.type .. "=False")
+            return hs
+          end
+          if c.type == "Programmed" and c.status == "False" then
+            hs.status = "Progressing"
+            hs.message = c.message or "Programmed=False"
+            return hs
+          end
+        end
+      end
+      for _, p in ipairs(obj.status.parents) do
+        for _, c in ipairs(p.conditions or {}) do
+          if c.type == "Accepted" and c.status == "True" then
+            hs.status = "Healthy"
+            hs.message = "Rota aceita pelo Gateway"
+            return hs
+          end
+        end
+      end
+    end
+    hs.status = "Progressing"
+    hs.message = "Aguardando o Gateway aceitar a rota"
+    return hs
