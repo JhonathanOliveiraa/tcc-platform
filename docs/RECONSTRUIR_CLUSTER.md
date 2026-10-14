@@ -12,8 +12,8 @@ Arquivos de apoio (caminhos a partir da raiz deste repositório; **execute os co
 
 | Arquivo | Para quê |
 |---|---|
-| `platform/ingress/kong-values.yaml` | Kong com os dois ajustes obrigatórios (roteador e IP real) |
-| `platform/ingress/faixas-cloudflare.sh` | Gera o `trusted_ips` do Kong com as faixas atuais do Cloudflare |
+| `platform/gateway/kong-values.yaml` | Kong com os dois ajustes obrigatórios (roteador e IP real) |
+| `platform/gateway/faixas-cloudflare.sh` | Gera o `trusted_ips` do Kong com as faixas atuais do Cloudflare |
 | `platform/cert-manager/cluster-issuers.yaml` | Let's Encrypt staging/prod com DNS-01 no Cloudflare |
 | `platform/argocd/argocd-ingress.yaml` | UI do Argo CD com TLS e restrição por IP |
 | `docs/testes/teste-roteamento.yaml` | Matriz de hosts com backends falsos para testar o Kong |
@@ -131,12 +131,17 @@ kubectl get storageclass               # local-path (default)
 
 ---
 
-## Fase 3 — Ingress (Kong sobre o ServiceLB)
+## Fase 3 — Entrada HTTP (Kong + Gateway API sobre o ServiceLB)
+
+> **Padrão do TCC: Gateway API, não Ingress.** Instale os CRDs do canal *standard* da Gateway API
+> **antes** do Kong (o controlador só habilita a Gateway API se os CRDs existirem na subida), depois
+> aplique `GatewayClass` + `Gateway` de `platform/gateway/`. As aplicações usam `HTTPRoute`. Os exemplos
+> com `Ingress` abaixo (Argo CD, teste de roteamento) vêm do CaIA e devem ser convertidos para `HTTPRoute`.
 
 ```bash
 helm repo add kong https://charts.konghq.com && helm repo update
 kubectl get svc -A | awk '$3=="LoadBalancer"'      # deve vir vazio: o klipper publica 1 Service por porta
-helm install kong kong/ingress --version 0.24.0 -n kong --create-namespace -f platform/ingress/kong-values.yaml
+helm install kong kong/ingress --version 0.24.0 -n kong --create-namespace -f platform/gateway/kong-values.yaml
 ```
 
 Os dois ajustes do `kong-values.yaml` são obrigatórios neste cenário:
@@ -278,7 +283,7 @@ Observability → Kubernetes; e-mail de teste do contact point recebido.
 2. **Repositório da aplicação:** `k8s/base` + `k8s/overlays/{prod,hml}` (modelo: `k8s/` do CaIA), com:
    probes (`startupProbe` generosa se houver migrations), `initContainer` que espera dependências
    externas (a rede de um pod novo leva ~3 s — Aprendizados 4.5), `resources`, usuário não-root,
-   `Certificate` do ambiente e Ingress com `konghq.com/protocols: https`.
+   `Certificate` do ambiente (referenciado no listener do `Gateway`) e `HTTPRoute` para o `Gateway` do Kong.
 3. **Esteira:** no repositório da aplicação, um `.github/workflows/ci.yml` curto que chama o template
    compartilhado (`backend-service.yml` ou `frontend-service.yml`) do repositório `tcc-pipeline-templates`
    — mesmo modelo dos templates `extends` usados em ambiente corporativo. O template publica a imagem no
@@ -308,8 +313,8 @@ Observability → Kubernetes; e-mail de teste do contact point recebido.
 
 1. SSL/TLS → **Full (strict)**; Always Use HTTPS; TLS mínimo 1.2; **Bot Fight Mode desligado**
    (desafia os probes do Synthetic Monitoring).
-2. Kong confiando nas faixas do Cloudflare: `./platform/ingress/faixas-cloudflare.sh`, colar em
-   `kong-values.yaml` e `helm upgrade kong kong/ingress -n kong --reuse-values -f platform/ingress/kong-values.yaml`.
+2. Kong confiando nas faixas do Cloudflare: `./platform/gateway/faixas-cloudflare.sh`, colar em
+   `kong-values.yaml` e `helm upgrade kong kong/ingress -n kong --reuse-values -f platform/gateway/kong-values.yaml`.
 3. Ligar o proxy só onde faz sentido: fronts estáticos sim; APIs com requisições > 100 s não
    (limite do plano Free — Aprendizados 4.12); `*.hml` não (certificado grátis não cobre 2º nível);
    e-mail/DKIM **nunca**.

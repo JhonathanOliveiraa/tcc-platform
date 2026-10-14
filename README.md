@@ -7,7 +7,7 @@ da OCI). Fonte única da verdade — depois do bootstrap, nenhuma mudança é fe
 bootstrap/                único apply manual: instala o Argo CD e a Application raiz
 clusters/oci-k3s/         Application raiz (app-of-apps)
 platform/                 componentes comuns
-  ingress/                Kong (kong-values.yaml, faixas do Cloudflare)
+  gateway/                Kong como implementação da Gateway API: GatewayClass, Gateway, kong-values, faixas do Cloudflare
   cert-manager/           ClusterIssuers Let's Encrypt (DNS-01 no Cloudflare)
   external-secrets/       External Secrets Operator + ClusterSecretStore do OCI Vault
   observability/          Grafana Alloy (k8s-monitoring) → Grafana Cloud, receptor OTLP
@@ -31,6 +31,10 @@ O CI de uma aplicação **só escreve** em `apps/<aplicação>/kustomization.yam
 repositório é mantido pela equipe de plataforma.
 
 ## Ambientes e hosts
+
+**Exposição pela Gateway API, nunca por Ingress:** um `Gateway` do Kong (`platform/gateway/`) com
+listeners HTTPS por host, e um `HTTPRoute` por aplicação e ambiente no overlay. Os `Ingress` que existem
+no cluster são do CaIA e não servem de modelo.
 
 Subzona própria `tcc.altasistemas.com.br`, separada dos tenants do CaIA (que usam
 `*.altasistemas.com.br` e `*.hml.altasistemas.com.br` no mesmo Kong). Hosts exatos, registros DNS only
