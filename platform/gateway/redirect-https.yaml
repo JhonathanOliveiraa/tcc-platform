@@ -1,0 +1,128 @@
+# HTTP -> HTTPS (301), UMA ROTA POR HOST com requestRedirect.hostname explícito.
+# No KIC 3.5 + Kong 3.9, RequestRedirect SEM hostname vira plugin inválido e o Kong recusa a
+# configuração inteira (incidente de 2026-10-14, ver README). Host novo no Gateway = rota nova aqui.
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-argo
+  namespace: kong
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kong
+      sectionName: http
+  hostnames:
+    - argo.altasistemas.com.br
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            hostname: argo.altasistemas.com.br
+            statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-catalogo-tcc
+  namespace: kong
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kong
+      sectionName: http
+  hostnames:
+    - catalogo.tcc.altasistemas.com.br
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            hostname: catalogo.tcc.altasistemas.com.br
+            statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-catalogo-api-tcc
+  namespace: kong
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kong
+      sectionName: http
+  hostnames:
+    - catalogo-api.tcc.altasistemas.com.br
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            hostname: catalogo-api.tcc.altasistemas.com.br
+            statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-hml-catalogo-tcc
+  namespace: kong
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kong
+      sectionName: http
+  hostnames:
+    - hml-catalogo.tcc.altasistemas.com.br
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            hostname: hml-catalogo.tcc.altasistemas.com.br
+            statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-hml-catalogo-api-tcc
+  namespace: kong
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kong
+      sectionName: http
+  hostnames:
+    - hml-catalogo-api.tcc.altasistemas.com.br
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            hostname: hml-catalogo-api.tcc.altasistemas.com.br
+            statusCode: 301
