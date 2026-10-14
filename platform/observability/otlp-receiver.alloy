@@ -8,7 +8,9 @@
 // Preencher os dois valores do stack (Grafana Cloud → stack → OpenTelemetry → Configure):
 //   <OTLP_ENDPOINT>  ex.: https://otlp-gateway-prod-sa-east-1.grafana.net/otlp
 //   <INSTANCE_ID>    número da "Instance ID" dessa mesma tela
-// A senha já está no pod do Alloy (GCLOUD_RW_API_KEY, secret alloy-remote-cfg-grafana-cloud-k8s-monitoring).
+// Senha: token próprio (Cloud access policy "tcc-otlp", escopos traces:write, metrics:write,
+// logs:write) no Secret monitoring/grafana-cloud-otlp, chave "token". O GCLOUD_RW_API_KEY do
+// assistente NÃO serve: não tem traces:write e o gateway responde 401 (testado em 2026-10-14).
 
 otelcol.receiver.otlp "tcc" {
   grpc { endpoint = "0.0.0.0:4317" }
@@ -28,9 +30,14 @@ otelcol.processor.batch "tcc" {
   }
 }
 
+remote.kubernetes.secret "otlp" {
+  namespace = "monitoring"
+  name      = "grafana-cloud-otlp"
+}
+
 otelcol.auth.basic "grafana_cloud" {
   username = "1604714"
-  password = sys.env("GCLOUD_RW_API_KEY")
+  password = remote.kubernetes.secret.otlp.data["token"]
 }
 
 otelcol.exporter.otlphttp "grafana_cloud" {
