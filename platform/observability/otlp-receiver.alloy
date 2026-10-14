@@ -1,0 +1,41 @@
+// Pipeline do Fleet Management (Grafana Cloud): receptor OTLP das aplicações do TCC.
+// Não é aplicado pelo Argo: vive no Grafana Cloud (Connections → Collector → Fleet Management →
+// Remote configuration → Create pipeline), nome tcc_otlp_receiver, matchers:
+//   cluster = "k3s-oci"   e   workloadName = "alloy"
+// O assistente do k8s-monitoring cria o Service grafana-cloud-otel-receiver (4317/4318), mas NÃO
+// liga o receptor: sem este pipeline o SDK das apps envia e ninguém recebe (descarte silencioso).
+//
+// Preencher os dois valores do stack (Grafana Cloud → stack → OpenTelemetry → Configure):
+//   <OTLP_ENDPOINT>  ex.: https://otlp-gateway-prod-sa-east-1.grafana.net/otlp
+//   <INSTANCE_ID>    número da "Instance ID" dessa mesma tela
+// A senha já está no pod do Alloy (GCLOUD_RW_API_KEY, secret alloy-remote-cfg-grafana-cloud-k8s-monitoring).
+
+otelcol.receiver.otlp "tcc" {
+  grpc { endpoint = "0.0.0.0:4317" }
+  http { endpoint = "0.0.0.0:4318" }
+  output {
+    metrics = [otelcol.processor.batch.tcc.input]
+    logs    = [otelcol.processor.batch.tcc.input]
+    traces  = [otelcol.processor.batch.tcc.input]
+  }
+}
+
+otelcol.processor.batch "tcc" {
+  output {
+    metrics = [otelcol.exporter.otlphttp.grafana_cloud.input]
+    logs    = [otelcol.exporter.otlphttp.grafana_cloud.input]
+    traces  = [otelcol.exporter.otlphttp.grafana_cloud.input]
+  }
+}
+
+otelcol.auth.basic "grafana_cloud" {
+  username = "<INSTANCE_ID>"
+  password = sys.env("GCLOUD_RW_API_KEY")
+}
+
+otelcol.exporter.otlphttp "grafana_cloud" {
+  client {
+    endpoint = "<OTLP_ENDPOINT>"
+    auth     = otelcol.auth.basic.grafana_cloud.handler
+  }
+}
