@@ -1,9 +1,10 @@
 # Entrada HTTP/HTTPS do cluster pela Gateway API.
 # Pré-requisitos: crds/ aplicado + kong-controller reiniciado; certificado.yaml Ready;
 # platform/argocd/ aplicado (ReferenceGrant do argo-tls).
+# SEM RequestRedirect: no KIC 3.5 + Kong 3.9, RequestRedirect sem hostname invalida a configuração
+# INTEIRA do Kong (ver README e redirect-https.yaml.desativado).
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - gatewayclass.yaml
   - gateway.yaml
-  - redirect-https.yaml
