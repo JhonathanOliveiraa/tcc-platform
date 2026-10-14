@@ -15,7 +15,7 @@ Arquivos de apoio (caminhos a partir da raiz deste repositório; **execute os co
 | `platform/gateway/kong-values.yaml` | Kong com os dois ajustes obrigatórios (roteador e IP real) |
 | `platform/gateway/faixas-cloudflare.sh` | Gera o `trusted_ips` do Kong com as faixas atuais do Cloudflare |
 | `platform/cert-manager/cluster-issuers.yaml` | Let's Encrypt staging/prod com DNS-01 no Cloudflare |
-| `platform/argocd/argocd-ingress.yaml` | UI do Argo CD com TLS e restrição por IP |
+| `platform/argocd/argocd-rota.yaml` | UI do Argo CD com TLS e restrição por IP |
 | `docs/testes/teste-roteamento.yaml` | Matriz de hosts com backends falsos para testar o Kong |
 | repositório `tcc-pipeline-templates` | Esteira: testes → Trivy → build arm64 → Trivy → tag no overlay |
 
@@ -233,7 +233,7 @@ kubectl -n argocd rollout status deploy/argocd-server
 
 **UI com TLS e restrição por IP:**
 ```bash
-sed -e 's/<DOMINIO>/exemplo.com.br/g' -e 's/<SEU_IP>/203.0.113.10/g' platform/argocd/argocd-ingress.yaml | kubectl apply -f -   # troque pelos seus valores
+kubectl apply -f platform/argocd/argocd-rota.yaml   # HTTPRoute + ReferenceGrant + ip-restriction (ajuste host e IPs)
 kubectl -n argocd annotate svc argocd-server konghq.com/protocol=https --overwrite
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
 ```

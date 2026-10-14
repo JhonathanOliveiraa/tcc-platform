@@ -1,0 +1,79 @@
+# UI do Argo CD em https://argo.altasistemas.com.br pela Gateway API (listener https-argo do
+# Gateway kong/kong), restrita por IP. Substitui o Ingress argocd-server.
+# Pré-requisito (já aplicado no cluster): o argocd-server só fala HTTPS, então
+#   kubectl -n argocd annotate svc argocd-server konghq.com/protocol=https --overwrite
+---
+# Deixa o Gateway (namespace kong) usar o certificado deste namespace no listener HTTPS.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: gateway-le-certificado
+  namespace: argocd
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: kong
+  to:
+    - group: ""
+      kind: Secret
+      name: argo-tls
+---
+# Certificado já existente no cluster (Let's Encrypt, DNS-01); versionado aqui.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argo-tls
+  namespace: argocd
+spec:
+  secretName: argo-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - argo.altasistemas.com.br
+---
+# Novo IP: acrescente uma linha em allow (vale na hora).
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: argo-ip-restriction
+  namespace: argocd
+plugin: ip-restriction
+config:
+  allow:
+    - 177.2.116.19    # jhonathan
+  status: 403
+  message: "Acesso restrito"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    # Sem buffer de resposta: o Watch do Argo CD (UI ao vivo, argocd app wait) é um stream.
+    konghq.com/response-buffering: "false"
+spec:
+  parentRefs:
+    # group/kind explícitos: são os defaults gravados pela API; sem eles o Argo CD acusa OutOfSync.
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kong
+      namespace: kong
+      sectionName: https-argo
+  hostnames:
+    - argo.altasistemas.com.br
+  rules:
+    - filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: configuration.konghq.com
+            kind: KongPlugin
+            name: argo-ip-restriction
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: argocd-server
+          port: 443
+          weight: 1

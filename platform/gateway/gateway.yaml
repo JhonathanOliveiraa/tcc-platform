@@ -1,32 +1,52 @@
-# Gateway da plataforma: HTTPS para *.tcc.altasistemas.com.br e HTTP só para redirecionar.
-# Só namespaces com o label tcc/exposto=true podem anexar HTTPRoute ao listener HTTPS.
+# Gateway único do cluster (mesmo modelo do norte-k3s): no modo unmanaged todos os Gateways da
+# classe dividem o mesmo proxy (80/443). Host novo = novo listener HTTPS aqui.
+#
+# Ordem segura (incidente de 2026-10-14, ver README): os Secrets referenciados nos listeners
+# precisam existir e estar válidos ANTES de aplicar este arquivo.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: tcc
+  name: kong
   namespace: kong
 spec:
   gatewayClassName: kong
   listeners:
-    - name: https
+    # HTTP: só recebe as HTTPRoutes de redirecionamento para HTTPS (redirect-https.yaml).
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+
+    # --- Argo CD (certificado em argocd/argo-tls, liberado por ReferenceGrant) ---
+    - name: https-argo
+      protocol: HTTPS
+      port: 443
+      hostname: argo.altasistemas.com.br
+      tls:
+        certificateRefs:
+          - name: argo-tls
+            namespace: argocd
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: argocd
+
+    # --- Aplicações do TCC (*.tcc.altasistemas.com.br, certificado wildcard em kong/) ---
+    # Só namespaces com o label tcc/exposto=true anexam rotas aqui.
+    - name: https-tcc
       protocol: HTTPS
       port: 443
       hostname: "*.tcc.altasistemas.com.br"
       tls:
-        mode: Terminate
         certificateRefs:
-          - kind: Secret
-            name: tcc-wildcard-tls
+          - name: tcc-wildcard-tls
       allowedRoutes:
         namespaces:
           from: Selector
           selector:
             matchLabels:
               tcc/exposto: "true"
-    - name: http
-      protocol: HTTP
-      port: 80
-      hostname: "*.tcc.altasistemas.com.br"
-      allowedRoutes:
-        namespaces:
-          from: Same

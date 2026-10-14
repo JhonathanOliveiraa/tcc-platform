@@ -1,8 +1,9 @@
-# Entrada HTTP/HTTPS do TCC pela Gateway API. Pré-requisito: crds/ aplicado e kong-controller reiniciado.
+# Entrada HTTP/HTTPS do cluster pela Gateway API.
+# Pré-requisitos: crds/ aplicado + kong-controller reiniciado; certificado.yaml Ready;
+# platform/argocd/ aplicado (ReferenceGrant do argo-tls).
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - gatewayclass.yaml
-  - certificado.yaml
   - gateway.yaml
   - redirect-https.yaml

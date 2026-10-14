@@ -1,14 +1,15 @@
-# Todo HTTP da subzona vai para HTTPS (301).
+# HTTP -> HTTPS (301) para os hosts atendidos pelo Gateway.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: tcc-redirect-https
+  name: redirect-https
   namespace: kong
 spec:
   parentRefs:
-    - name: tcc
+    - name: kong
       sectionName: http
   hostnames:
+    - argo.altasistemas.com.br
     - "*.tcc.altasistemas.com.br"
   rules:
     - filters:
