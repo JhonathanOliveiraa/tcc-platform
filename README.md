@@ -30,6 +30,20 @@ docs/                     roteiro de reconstrução e testes
 O CI de uma aplicação **só escreve** em `apps/<aplicação>/kustomization.yaml`; o restante deste
 repositório é mantido pela equipe de plataforma.
 
+## Ambientes e hosts
+
+Subzona própria `tcc.altasistemas.com.br`, separada dos tenants do CaIA (que usam
+`*.altasistemas.com.br` e `*.hml.altasistemas.com.br` no mesmo Kong). Hosts exatos, registros DNS only
+(sem proxy do Cloudflare), certificados Let's Encrypt por DNS-01.
+
+| Ambiente | Front (`catalogo-front`) | API (`catalogo-api`) |
+|---|---|---|
+| hml | `hml-catalogo.tcc.altasistemas.com.br` | `hml-catalogo-api.tcc.altasistemas.com.br` |
+| prd | `catalogo.tcc.altasistemas.com.br` | `catalogo-api.tcc.altasistemas.com.br` |
+
+Variáveis que ligam os dois: no front, `API_BASE_URL=https://<host da API>`; na API,
+`Cors__OrigensPermitidas=https://<host do front>` — definidas nos overlays `apps/<app>/<ambiente>`.
+
 ## Segredos
 
 Nenhum valor no Git. Os valores ficam no **OCI Vault**; aqui ficam apenas `ExternalSecret` com os nomes
