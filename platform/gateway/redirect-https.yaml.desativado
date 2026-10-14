@@ -1,3 +1,9 @@
+# DESATIVADO (2026-10-14, segunda tentativa): com hostname explícito o Kong aceita a configuração,
+# mas o redirect fica INSTÁVEL (301 ou 426 conforme a sincronização). Com router_flavor
+# traditional_compatible o Kong não usa o protocolo para escolher entre esta rota (HTTP) e a rota da
+# app (HTTPS) no mesmo host + caminho; se escolhe a da app, responde 426. As anotações
+# konghq.com/https-redirect-status-code/protocols só valem para Ingress. Saídas possíveis: router
+# "expressions" (protocolo entra no match) ou proxy do Cloudflare com "Always Use HTTPS".
 # HTTP -> HTTPS (301), UMA ROTA POR HOST com requestRedirect.hostname explícito.
 # No KIC 3.5 + Kong 3.9, RequestRedirect SEM hostname vira plugin inválido e o Kong recusa a
 # configuração inteira (incidente de 2026-10-14, ver README). Host novo no Gateway = rota nova aqui.

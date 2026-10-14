@@ -24,8 +24,8 @@ do Kong por ~2 min, até o Gateway ser removido.
 sem `hostname`). No KIC 3.5 + Kong 3.9 ele vira um plugin inválido e o Kong recusa a configuração
 inteira; os erros de `certificate` no log são consequência (ver issue Kong/kubernetes-ingress-controller#7831).
 Sem o redirect, o mesmo Gateway foi aceito sem nenhum erro, convivendo com os `Ingress` do CaIA.
-O mesmo limite está registrado no norte-k3s (`k8s/PADROES.md`). Hoje HTTP responde **426**; o redirect
-volta como uma rota por host com `requestRedirect.hostname` explícito, ou com Kong 3.10+.
+O mesmo limite está registrado no norte-k3s (`k8s/PADROES.md`). Hoje HTTP responde **426**. Uma rota por host com `requestRedirect.hostname`
+explícito é aceita, mas fica instável (ver `redirect-https.yaml.desativado`).
 
 Ordem adotada depois (a mesma do norte-k3s, que só usa Gateway API):
 
