@@ -24,7 +24,7 @@ instrumenta e cada requisição apareceria duas vezes.
 | O quê | Detalhe |
 |---|---|
 | Regras de alerta (pasta `TCC`, grupo `tcc`) | **Erros 5xx na API** (> 5% em 2 min, métricas OTLP) · **Pod sem réplica pronta** (kube-state-metrics, 3 min) · **Aplicação indisponível** (`probe_success` dos checks `tcc-*`, 2 min) |
-| Synthetic Monitoring (`--sinteticos`) | GET `/healthz` do front e `/health` da API, hml e prd, a cada 60 s, de 3 pontos de prova públicos |
+| Synthetic Monitoring (`--sinteticos`) | GET `/healthz` do front e `/health` da API, hml e prd, a cada 5 min, de 1 ponto de prova (São Paulo) — limite da cota gratuita de 100 mil execuções/mês, compartilhada com outros projetos do stack |
 | Painel `tcc-aplicacoes` | requisições/status e latência da API, CPU/memória por namespace, sintéticos, logs e traces (`painel-tcc.json`) |
 
 ```bash

@@ -68,8 +68,8 @@ def regra(uid, titulo, expr, limite, para, ds_prom, descricao):
 def alertas(ds_prom):
     regras = [
         regra("tcc-erros-5xx-api", "Erros 5xx na API",
-              'sum (rate(http_server_request_duration_seconds_count{job="catalogo-api", http_response_status_code=~"5.."}[2m]))'
-              ' / sum (rate(http_server_request_duration_seconds_count{job="catalogo-api"}[2m]))',
+              'sum by (deployment_environment) (rate(http_server_request_duration_seconds_count{job="catalogo-api", http_response_status_code=~"5.."}[2m]))'
+              ' / sum by (deployment_environment) (rate(http_server_request_duration_seconds_count{job="catalogo-api"}[2m]))',
               0.05, "2m", ds_prom, "Mais de 5% das requisições da API com status 5xx (métricas OTLP)."),
         regra("tcc-replica-indisponivel", "Pod sem réplica pronta",
               'max by (namespace) (kube_deployment_status_replicas_unavailable{cluster="k3s-oci", namespace=~"catalogo-.*", deployment="app"})',
@@ -95,10 +95,14 @@ def painel(ds_prom, ds_loki, ds_tempo):
 
 
 def sinteticos():
-    """Checks HTTP via proxy do plugin Synthetic Monitoring (usa o token que o plugin já guarda)."""
-    base = "/api/plugin-proxy/grafana-synthetic-monitoring-app/sm"
+    """Checks HTTP pelo proxy do datasource do Synthetic Monitoring (usa o token que o app já guarda)."""
+    uid = next(d["uid"] for d in api("GET", "/api/datasources") if d["type"] == "synthetic-monitoring-datasource")
+    base = f"/api/datasources/proxy/uid/{uid}/sm"
     sondas = api("GET", f"{base}/probe/list")
-    ids = [p["id"] for p in sondas if p.get("public") and p.get("online")][:3]
+    # Cota gratuita: 100 mil execuções/mês no stack (já há checks de outros projetos). 4 checks,
+    # 1 ponto de prova (São Paulo, se houver), a cada 5 min = 34.560 execuções/mês.
+    publicas = [p for p in sondas if p.get("public") and p.get("online")]
+    ids = [next((p for p in publicas if "Paulo" in p["name"]), publicas[0])["id"]]
     existentes = {c["job"]: c for c in api("GET", f"{base}/check/list")}
     alvos = [
         ("tcc-front-hml", "https://hml-catalogo.tcc.altasistemas.com.br/healthz"),
@@ -107,7 +111,7 @@ def sinteticos():
         ("tcc-api-prd", "https://catalogo-api.tcc.altasistemas.com.br/health"),
     ]
     for job, alvo in alvos:
-        check = {"job": job, "target": alvo, "frequency": 60000, "timeout": 10000, "enabled": True,
+        check = {"job": job, "target": alvo, "frequency": 300000, "timeout": 10000, "enabled": True,
                  "probes": ids, "labels": [{"name": "plataforma", "value": "tcc"}],
                  "settings": {"http": {"method": "GET", "validStatusCodes": [200], "ipVersion": "V4", "failIfNotSSL": True}},
                  "basicMetricsOnly": True, "alertSensitivity": "none"}
