@@ -26,5 +26,5 @@ patches:
 images:
   # A esteira (tcc-pipeline-templates) grava aqui a tag de cada build.
   - name: ghcr.io/jhonathanoliveiraa/catalogo-api
-    newTag: sha-fa0cebf00174
-    digest: sha256:be686f38a416ff7bb5efa2155da5c7ed4626708327c849c114213483f3ad511e
+    newTag: sha-c4f915c6ffc6
+    digest: sha256:f6661ca38119a0d32ec7405d3e8adbfd462cd896f0e24f3cfb5ffa9d11e7b652
