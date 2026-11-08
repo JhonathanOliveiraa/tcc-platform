@@ -16,3 +16,19 @@ deve responder (405 Method Not Allowed), não 502 — e o log do Alloy
 
 Não ligar instrumentação automática (Beyla/injeção) para os namespaces `catalogo-*`: a API já se
 instrumenta e cada requisição apareceria duas vezes.
+
+## Alertas, verificações sintéticas e painel (como código)
+
+`provisionar_grafana.py` cria/atualiza no Grafana Cloud, pelos UIDs fixos (idempotente):
+
+| O quê | Detalhe |
+|---|---|
+| Regras de alerta (pasta `TCC`, grupo `tcc`) | **Erros 5xx na API** (> 5% em 2 min, métricas OTLP) · **Pod sem réplica pronta** (kube-state-metrics, 3 min) · **Aplicação indisponível** (`probe_success` dos checks `tcc-*`, 2 min) |
+| Synthetic Monitoring (`--sinteticos`) | GET `/healthz` do front e `/health` da API, hml e prd, a cada 60 s, de 3 pontos de prova públicos |
+| Painel `tcc-aplicacoes` | requisições/status e latência da API, CPU/memória por namespace, sintéticos, logs e traces (`painel-tcc.json`) |
+
+```bash
+GRAFANA_TOKEN=$(cat ~/.config/tcc-grafana-token) python3 -I platform/observability/provisionar_grafana.py --sinteticos
+```
+
+O token é de uma *service account* com papel Admin no stack e nunca vai para o Git.
