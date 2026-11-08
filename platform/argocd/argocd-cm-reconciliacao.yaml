@@ -1,0 +1,10 @@
+# Intervalo de consulta do Argo CD ao Git. O padrão (120 s + até 60 s de jitter no controller, e o
+# cache de revisões de 3 min no repo-server, que usa a mesma chave) deixava a detecção de um commit
+# entre 3 e 7 min — medido na avaliação do TCC (Cap. 5). 60 s + 10 s reduz para ~1–2 min ao custo de
+# uma consulta ls-remote por minuto ao GitHub. Alternativa sem polling: webhook do GitHub (exige
+# expor o endpoint do Argo CD à internet; hoje a rota é restrita por IP).
+# Aplicar: kubectl -n argocd patch configmap argocd-cm --patch-file platform/argocd/argocd-cm-reconciliacao.yaml
+#          kubectl -n argocd rollout restart deploy/argocd-repo-server sts/argocd-application-controller
+data:
+  timeout.reconciliation: 60s
+  timeout.reconciliation.jitter: 10s
