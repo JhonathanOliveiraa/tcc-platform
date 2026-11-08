@@ -10,6 +10,9 @@ metadata:
 spec:
   replicas: 1
   revisionHistoryLimit: 3
+  # Versão que não fica pronta em 3 min é marcada como falha (Argo CD: Degraded). O padrão do
+  # Kubernetes (600 s) atrasaria a detecção; 180 s cobrem a startupProbe (24 × 5 s) com folga.
+  progressDeadlineSeconds: 180
   strategy:
     type: RollingUpdate
     rollingUpdate:
