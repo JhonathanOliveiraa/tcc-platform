@@ -36,10 +36,11 @@ def api(metodo, caminho, corpo=None, ok=(200, 201, 202, 204), extra=None):
 
 
 def datasource(tipo):
-    ds = [d for d in api("GET", "/api/datasources") if d["type"] == tipo and d["name"].startswith("grafanacloud-")]
-    if not ds:
-        raise RuntimeError(f"datasource {tipo} não encontrado")
-    return ds[0]["uid"]
+    # UIDs fixos do Grafana Cloud; há outros datasources do mesmo tipo (histórico de alertas, uso).
+    uid = {"prometheus": "grafanacloud-prom", "loki": "grafanacloud-logs", "tempo": "grafanacloud-traces"}[tipo]
+    if not any(d["uid"] == uid for d in api("GET", "/api/datasources")):
+        raise RuntimeError(f"datasource {uid} não encontrado")
+    return uid
 
 
 def pasta():

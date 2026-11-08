@@ -38,7 +38,7 @@
             "type": "prometheus",
             "uid": "${DS_PROM}"
           },
-          "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{job=\"catalogo-api\"}[1m]))",
+          "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{job=\"catalogo-api\"}[5m]))",
           "legendFormat": "{{http_response_status_code}}",
           "refId": "A"
         }
@@ -65,7 +65,7 @@
             "type": "prometheus",
             "uid": "${DS_PROM}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"catalogo-api\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"catalogo-api\"}[5m])))",
           "legendFormat": "p95",
           "refId": "A"
         },
@@ -74,7 +74,7 @@
             "type": "prometheus",
             "uid": "${DS_PROM}"
           },
-          "expr": "histogram_quantile(0.5, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"catalogo-api\"}[1m])))",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"catalogo-api\"}[5m])))",
           "legendFormat": "p50",
           "refId": "B"
         }
@@ -172,7 +172,7 @@
             "type": "loki",
             "uid": "${DS_LOKI}"
           },
-          "expr": "{cluster=\"k3s-oci\", namespace=~\"catalogo-.*-$amb\"}",
+          "expr": "{cluster=\"k3s-oci\", namespace=~\"catalogo-.*-$amb\", job=~\".*/app\"}",
           "refId": "A"
         }
       ]
