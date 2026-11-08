@@ -9,6 +9,11 @@ Contrato comum de toda aplicação do TCC:
 | `HTTPRoute` `app` | anexada ao listener `https-tcc` do Gateway `kong/kong`; host definido no overlay |
 | `ExternalSecret` `ghcr` | pull das imagens privadas do GHCR a partir do OCI Vault |
 | `ServiceAccount` `app` | sem token montado |
+| `NetworkPolicy` `bloqueia-metadados-da-vm` | saída liberada, exceto `169.254.169.254` (identidade da VM / Instance Principal) |
+| anotação `reloader.stakater.com/auto` | rolling update quando um Secret usado pelo pod muda (troca no Vault) |
+
+O namespace não é um arquivo: é `<app>-<amb>`, criado pelo ApplicationSet com os labels
+`tcc/exposto=true` (exigido pelo listener do Gateway) e `tcc/ambiente`.
 
 Convenção: os recursos se chamam `app` e a identidade vem do namespace `<app>-<amb>`. Cada aplicação
 ajusta o contrato em `apps/<app>/base` e cada ambiente em `apps/<app>/<amb>`.

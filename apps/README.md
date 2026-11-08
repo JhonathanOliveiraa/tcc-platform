@@ -9,14 +9,18 @@ apps/<app>/
   hml/ prd/       namespace <app>-<amb>, host, variáveis, chaves do Vault, tag da imagem
 ```
 
-O `ci.yml` da aplicação escolhe o overlay pela branch (`develop` → `hml`, `main` → `prd`). A esteira
-atualiza o `newTag` do bloco `images:`:
+Um push na `main` da aplicação publica em `hml`; `prd` recebe a mesma imagem pelo workflow
+`promover` (Actions deste repositório). A esteira atualiza `newTag` e `digest` do bloco `images:`:
 
 ```yaml
 images:
   - name: ghcr.io/jhonathanoliveiraa/<app>
     newTag: sha-<12 primeiros do commit>   # gravado pela esteira
+    digest: sha256:<...>                    # idem; o Kustomize renderiza <imagem>:<tag>@<digest>
 ```
+
+Cada pasta `apps/<app>/<amb>` vira a Application `<app>-<amb>` no namespace `<app>-<amb>`
+(ApplicationSet com gerador de diretórios do Git; `base/` é ignorada).
 
 ## Segredos esperados no OCI Vault (`ClusterSecretStore` `oci-vault-tcc`)
 

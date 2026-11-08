@@ -1,0 +1,17 @@
+# A VM se autentica na OCI por Instance Principal: qualquer pod que alcance o serviço de metadados
+# (169.254.169.254) obteria a identidade da VM e, com ela, a leitura do OCI Vault. Só o External
+# Secrets Operator precisa disso; nos namespaces das aplicações o endereço é bloqueado.
+# Ingresso não é restringido (o Gateway e a coleta de métricas chegam de outros namespaces).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: bloqueia-metadados-da-vm
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32

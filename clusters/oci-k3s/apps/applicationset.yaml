@@ -1,4 +1,6 @@
-# Uma Application por aplicação × ambiente, a partir de apps/<app>/<amb>.
+# Uma Application por aplicação × ambiente, descoberta pelo diretório: cada pasta apps/<app>/<amb>
+# (exceto apps/<app>/base) vira a Application <app>-<amb>. Incorporar uma aplicação nova é só criar
+# a pasta no Git — nenhum arquivo fora de apps/<app> é alterado.
 # O namespace <app>-<amb> é criado pela Application (com os labels que o Gateway e o ESO exigem) e
 # não pertence a ela: apagar uma Application nunca apaga o namespace nem o banco.
 apiVersion: argoproj.io/v1alpha1
@@ -10,34 +12,31 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
-    - matrix:
-        generators:
-          - list:
-              elements:
-                - app: catalogo-api
-                - app: catalogo-front
-          - list:
-              elements:
-                - amb: hml
-                - amb: prd
+    - git:
+        repoURL: https://github.com/JhonathanOliveiraa/tcc-platform.git
+        revision: main
+        directories:
+          - path: apps/*/*
+          - path: apps/*/base
+            exclude: true
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:
     metadata:
-      name: "{{.app}}-{{.amb}}"
+      name: "{{index .path.segments 1}}-{{.path.basename}}"
       labels:
         app.kubernetes.io/part-of: tcc
-        app.kubernetes.io/name: "{{.app}}"
-        app.kubernetes.io/environment: "{{.amb}}"
+        app.kubernetes.io/name: "{{index .path.segments 1}}"
+        app.kubernetes.io/environment: "{{.path.basename}}"
     spec:
       project: tcc
       source:
         repoURL: https://github.com/JhonathanOliveiraa/tcc-platform.git
         targetRevision: main
-        path: "apps/{{.app}}/{{.amb}}"
+        path: "{{.path.path}}"
       destination:
         server: https://kubernetes.default.svc
-        namespace: "{{.app}}-{{.amb}}"
+        namespace: "{{index .path.segments 1}}-{{.path.basename}}"
       ignoreDifferences:
         - group: apps
           kind: StatefulSet
@@ -54,4 +53,4 @@ spec:
         managedNamespaceMetadata:
           labels:
             tcc/exposto: "true"
-            tcc/ambiente: "{{.amb}}"
+            tcc/ambiente: "{{.path.basename}}"

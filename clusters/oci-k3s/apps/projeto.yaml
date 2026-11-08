@@ -1,17 +1,31 @@
+# Limites do que o overlay de uma aplicação pode criar no cluster. A esteira de CI tem um token de
+# escrita no repositório inteiro; o que impede um overlay de virar porta de entrada para o cluster é
+# este AppProject: só namespaces <app>-hml/<app>-prd, só este repositório e só os tipos abaixo
+# (nada de RBAC, CRD, webhook, PV ou recurso de cluster além do Namespace).
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: tcc
   namespace: argocd
 spec:
-  description: TCC — aplicações de validação da plataforma
+  description: TCC — aplicações incorporadas pelo Golden Path
   sourceRepos:
     - https://github.com/JhonathanOliveiraa/tcc-platform.git
   destinations:
-    - { server: https://kubernetes.default.svc, namespace: catalogo-api-hml }
-    - { server: https://kubernetes.default.svc, namespace: catalogo-api-prd }
-    - { server: https://kubernetes.default.svc, namespace: catalogo-front-hml }
-    - { server: https://kubernetes.default.svc, namespace: catalogo-front-prd }
+    - { server: https://kubernetes.default.svc, namespace: "*-hml" }
+    - { server: https://kubernetes.default.svc, namespace: "*-prd" }
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
+  namespaceResourceWhitelist:
+    - { group: "", kind: ServiceAccount }
+    - { group: "", kind: Service }
+    - { group: "", kind: ConfigMap }
+    - { group: apps, kind: Deployment }
+    - { group: apps, kind: StatefulSet }
+    - { group: batch, kind: CronJob }
+    - { group: batch, kind: Job }
+    - { group: policy, kind: PodDisruptionBudget }
+    - { group: networking.k8s.io, kind: NetworkPolicy }
+    - { group: gateway.networking.k8s.io, kind: HTTPRoute }
+    - { group: external-secrets.io, kind: ExternalSecret }

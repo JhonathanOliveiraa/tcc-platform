@@ -1,0 +1,44 @@
+# Promoção hml → prd: copia a imagem (tag + digest) do overlay de hml para o de prd, num commit.
+# A imagem promovida é byte a byte a que foi validada em hml; nada é reconstruído.
+name: promover
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Aplicação (pasta em apps/)"
+        type: choice
+        options: [catalogo-api, catalogo-front]
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-manifest-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  promover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copiar a imagem de hml para prd
+        env:
+          APP: ${{ inputs.app }}
+        run: |
+          set -euo pipefail
+          ORIGEM="apps/${APP}/hml/kustomization.yaml"
+          DESTINO="apps/${APP}/prd/kustomization.yaml"
+          export IMAGEM="ghcr.io/jhonathanoliveiraa/${APP}"
+          export TAG=$(yq '.images[] | select(.name == strenv(IMAGEM)) | .newTag' "$ORIGEM")
+          export DIGEST=$(yq '.images[] | select(.name == strenv(IMAGEM)) | .digest' "$ORIGEM")
+          [ "$DIGEST" != "null" ] || { echo "::error::hml ainda não tem digest (nenhum build publicado)"; exit 1; }
+          yq -i '(.images[] | select(.name == strenv(IMAGEM))) |= (.newTag = strenv(TAG) | .digest = strenv(DIGEST))' "$DESTINO"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$DESTINO"
+          git diff --cached --quiet && { echo "prd já está em ${TAG}"; exit 0; }
+          git commit -m "promove(${APP}): ${TAG} hml → prd" -m "${IMAGEM}@${DIGEST}"
+          git push
+          echo "### ${APP}: ${TAG} promovida para prd" >> "$GITHUB_STEP_SUMMARY"

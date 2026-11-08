@@ -4,6 +4,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
+  annotations:
+    # Reloader: Secret/ConfigMap alterado (ex.: segredo trocado no OCI Vault) → rolling update.
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   revisionHistoryLimit: 3

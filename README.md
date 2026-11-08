@@ -12,8 +12,8 @@ platform/                 componentes comuns
   external-secrets/       External Secrets Operator + ClusterSecretStore do OCI Vault
   observability/          Grafana Alloy (k8s-monitoring) → Grafana Cloud, receptor OTLP
   argocd/                 rota da UI do Argo CD
-  argocd-projects/        AppProjects com destinos limitados
-golden-path/base/         template das aplicações: Deployment, Service, probes, resources, OTel
+  argocd-projects/        (o AppProject tcc fica em clusters/oci-k3s/apps/projeto.yaml)
+golden-path/base/         template das aplicações: Deployment, Service, HTTPRoute, NetworkPolicy, probes, OTel
 apps/<aplicação>/         overlay de cada aplicação (a esteira grava aqui a tag da imagem)
 docs/                     roteiro de reconstrução e testes
 ```
@@ -27,8 +27,19 @@ docs/                     roteiro de reconstrução e testes
 | `catalogo-front` | Frontend de Catálogo (Angular) — código, Dockerfile e `ci.yml` |
 | `tcc-documentacao` | Texto do TCC, apresentação e planejamento |
 
-O CI de uma aplicação **só escreve** em `apps/<aplicação>/kustomization.yaml`; o restante deste
-repositório é mantido pela equipe de plataforma.
+O CI de uma aplicação **só escreve** em `apps/<aplicação>/hml/kustomization.yaml` (tag + digest da
+imagem); `prd` recebe a mesma imagem pelo workflow `promover`. O restante deste repositório é mantido
+pela equipe de plataforma.
+
+**Incorporar uma aplicação:** [`docs/ONBOARDING.md`](docs/ONBOARDING.md). O ApplicationSet `tcc` descobre
+as pastas `apps/<app>/<amb>` (gerador de diretórios do Git): criar a pasta cria a Application, sem tocar
+em nada fora de `apps/<app>/`.
+
+**O que limita a esteira:** o token da CI tem escrita no repositório inteiro, então a proteção não está no
+token. (1) O template de CI recusa o commit se mudar qualquer arquivo além do `kustomization.yaml` do
+overlay; (2) o AppProject `tcc` só aceita namespaces `*-hml`/`*-prd`, só este repositório e só tipos
+de recurso de aplicação (sem RBAC, CRD, webhook ou recurso de cluster além de `Namespace`); (3) todo
+commit fica no histórico com o autor `github-actions[bot]`.
 
 ## Ambientes e hosts
 
